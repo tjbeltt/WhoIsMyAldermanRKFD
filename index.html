@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rockford Ward Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1a3a6b;
+    --gold: #c9a84c;
+    --light: #f5f2ec;
+    --dark: #0e1f3d;
+    --gray: #7a8499;
+    --card-bg: #ffffff;
+    --shadow: 0 4px 24px rgba(26,58,107,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--blue);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-stripe {
+    height: 6px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 40px, var(--blue) 40px, var(--blue) 60px);
+  }
+  .header-inner {
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .city-seal {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 0.7rem;
+    color: var(--dark);
+    text-align: center;
+    line-height: 1.1;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,0.2);
+  }
+  .header-text h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    color: #fff;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  .header-text p {
+    color: var(--gold);
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  /* MAIN */
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* SEARCH BOX */
+  .search-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-top: 4px solid var(--gold);
+  }
+  .search-card label {
+    display: block;
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 0.6rem;
+  }
+  .input-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .input-row input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.85rem 1.1rem;
+    border: 2px solid #dde3ef;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dark);
+    background: #fafbfd;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .input-row input:focus {
+    border-color: var(--blue);
+    background: #fff;
+  }
+  .input-row button {
+    padding: 0.85rem 1.8rem;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .input-row button:hover { background: #162f58; }
+  .input-row button:active { transform: scale(0.98); }
+
+  .hint {
+    margin-top: 0.7rem;
+    font-size: 0.82rem;
+    color: var(--gray);
+  }
+
+
+
+  /* STATUS */
+  #status {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.95rem;
+    color: var(--gray);
+    display: none;
+  }
+  #status.loading { display: block; }
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #dde3ef;
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULT CARD */
+  #result { display: none; }
+  #result.visible { display: block; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .ward-badge {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    background: var(--blue);
+    color: #fff;
+    border-radius: 12px 12px 0 0;
+    padding: 1.4rem 2rem;
+  }
+  .ward-number {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: var(--gold);
+  }
+  .ward-label-text small {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    display: block;
+  }
+  .ward-label-text strong {
+    font-size: 1.15rem;
+    font-weight: 500;
+  }
+  .address-found {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 0.2rem;
+  }
+
+  .alderman-card {
+    background: var(--card-bg);
+    border-radius: 0 0 12px 12px;
+    box-shadow: var(--shadow);
+    padding: 1.8rem 2rem;
+    border-bottom: 4px solid var(--gold);
+  }
+  .alderman-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2rem;
+    letter-spacing: 0.04em;
+    color: var(--dark);
+    margin-bottom: 1.2rem;
+  }
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .contact-item {
+    background: #f5f7fb;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+  }
+  .contact-item .ci-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 0.3rem;
+  }
+  .contact-item a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+  .contact-item a:hover { text-decoration: underline; }
+  .contact-item .ci-value {
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--dark);
+  }
+
+  .not-found {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    text-align: center;
+    border-top: 4px solid #e05c5c;
+    display: none;
+  }
+  .not-found.visible { display: block; animation: fadeUp 0.4s ease; }
+  .not-found h3 { color: #c0392b; margin-bottom: 0.5rem; }
+  .not-found p { color: var(--gray); font-size: 0.92rem; }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--gray);
+    font-size: 0.8rem;
+    border-top: 1px solid #dde3ef;
+    margin-top: 2rem;
+  }
+  footer a { color: var(--blue); }
+
+  @media (max-width: 520px) {
+    .header-inner { flex-direction: column; align-items: flex-start; }
+    .ward-badge { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-stripe"></div>
+  <div class="header-inner">
+    <div class="city-seal">CITY OF<br>ROCKFORD<br>IL</div>
+    <div class="header-text">
+      <h1>Ward Finder</h1>
+      <p>Find your Rockford City Council Alderman by address</p>
+      <p1>Do you know who your representatives are?</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="search-card">
+    <label for="addressInput">Your Rockford Address</label>
+    <div class="input-row">
+      <input type="text" id="addressInput" placeholder="e.g. 425 E State St, Rockford, IL" autocomplete="street-address"
+        onkeydown="if(event.key==='Enter') lookupAddress()">
+      <button onclick="lookupAddress()">Find My Alderman</button>
+    </div>
+    <p class="hint">Enter a Rockford, IL street address to find your elected alderman and their contact information.</p>
+  </div>
+
+  <div id="status"><span class="spinner"></span> Looking up your address...</div>
+
+  <div id="result">
+    <div class="ward-badge">
+      <div class="ward-number" id="wardNum">—</div>
+      <div class="ward-label-text">
+        <small>Your Ward</small>
+        <strong id="wardTitle">Ward</strong>
+        <div class="address-found" id="addressFound"></div>
+      </div>
+    </div>
+    <div class="alderman-card">
+      <div class="alderman-name" id="aldermanName"></div>
+      <div class="contact-grid" id="contactGrid"></div>
+    </div>
+  </div>
+
+  <div class="not-found" id="notFound">
+    <h3>Address Not Found in Rockford Wards</h3>
+    <p>We couldn't match that address to a Rockford ward. Make sure the address is within Rockford city limits and try again. You can also visit <a href="https://rockfordil.gov/576/Wards" target="_blank">rockfordil.gov/576/Wards</a> for the official ward map.</p>
+  </div>
+
+</main>
+
+<footer>
+  Data sourced from <a href="https://rockfordil.gov" target="_blank">rockfordil.gov</a>. Contact information current as of 2025.
+  This is an unofficial lookup tool — verify with the city for official information.
+</footer>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+const WORKER_URL = 'https://rockford-ward-proxy.belt-tim.workers.dev';
+
+// ─── ALDERMAN DATA ─────────────────────────────────────────────────────────
+// Source: rockfordil.gov/Directory.aspx?did=56 (updated 2025)
+const ALDERMEN = {
+  1:  { name: "Timothy J. Durkee",  phone: "815-519-6406" },
+  2:  { name: "Jonathan Logemann",  phone: "815-312-8747" },
+  3:  { name: "Chad Tuneberg",      phone: "815-977-5016" },
+  4:  { name: "Kevin Frost",        phone: "815-243-1300" },
+  5:  { name: "Gabrielle Torina",   phone: "815-893-9801" },
+  6:  { name: "Aprel Prunty",       phone: "815-601-6904" },
+  7:  { name: "Janessa Wilkins",    phone: "815-914-4020" },
+  8:  { name: "Karen Hoffman",      phone: "815-399-5026" },
+  9:  { name: "Dawn Granath",       phone: "779-895-4917" },
+  10: { name: "Franklin Beach",     phone: "815-978-8736" },
+  11: { name: "Jaime Salgado",      phone: "779-351-9807" },
+  12: { name: "Gina Meeks",         phone: "815-317-6572" },
+  13: { name: "Tamir Bell",         phone: "779-895-4349", altPhone: "815-200-1009" },
+  14: { name: "Mark Bonne",         phone: "815-289-4752" },
+};
+
+async function lookupAddress() {
+  const raw = document.getElementById('addressInput').value.trim();
+  if (!raw) return;
+
+  // Normalize — append Rockford IL if not present
+  let address = raw;
+  if (!/rockford/i.test(address)) address += ', Rockford, IL';
+  if (!/\bIL\b/i.test(address))   address += ', IL';
+
+  setStatus('loading');
+
+  try {
+    // Call our Cloudflare Worker proxy — API key never touches the browser
+    const res = await fetch(`${WORKER_URL}?address=${encodeURIComponent(address)}`);
+    const { geoData, civicData } = await res.json();
+
+    if (!geoData || geoData.status !== 'OK' || !geoData.results.length) {
+      throw new Error('geocode_failed');
+    }
+
+    const formattedAddr = geoData.results[0].formatted_address;
+
+    // Extract ward from civic data
+    let wardNum = extractWardFromCivic(civicData);
+    if (!wardNum) wardNum = extractWardFromDivisions(civicData);
+
+    if (wardNum && ALDERMEN[wardNum]) {
+      showResult(wardNum, formattedAddr);
+    } else {
+      showNotFound();
+    }
+
+  } catch (err) {
+    console.error(err);
+    showNotFound();
+  }
+}
+
+function extractWardFromCivic(data) {
+  if (!data || !data.divisions) return null;
+  for (const key of Object.keys(data.divisions)) {
+    const m = key.match(/ward[:\-_](\d+)/i) || key.match(/district[:\-_](\d+)/i);
+    if (m) return parseInt(m[1]);
+  }
+  if (data.offices) {
+    for (const office of data.offices) {
+      const m = (office.name || '').match(/ward\s*(\d+)/i);
+      if (m) return parseInt(m[1]);
+    }
+  }
+  return null;
+}
+
+function extractWardFromDivisions(data) {
+  if (!data || !data.divisions) return null;
+  for (const key of Object.keys(data.divisions)) {
+    const m = key.match(/(\d+)/g);
+    if (m) {
+      const n = parseInt(m[m.length - 1]);
+      if (n >= 1 && n <= 14) return n;
+    }
+  }
+  return null;
+}
+
+function showResult(ward, address) {
+  setStatus('idle');
+  const a = ALDERMEN[ward];
+  document.getElementById('wardNum').textContent = ward;
+  document.getElementById('wardTitle').textContent = `Ward ${ward}`;
+  document.getElementById('addressFound').textContent = address;
+  document.getElementById('aldermanName').textContent = a.name;
+
+  const grid = document.getElementById('contactGrid');
+  grid.innerHTML = '';
+
+  grid.innerHTML += `
+    <div class="contact-item">
+      <div class="ci-label">📞 Phone</div>
+      <a href="tel:${a.phone.replace(/[^0-9]/g,'')}">${a.phone}</a>
+    </div>`;
+
+  if (a.altPhone) {
+    grid.innerHTML += `
+      <div class="contact-item">
+        <div class="ci-label">📞 Alt Phone</div>
+        <a href="tel:${a.altPhone.replace(/[^0-9]/g,'')}">${a.altPhone}</a>
+      </div>`;
+  }
+
+  grid.innerHTML += `
+    <div class="contact-item">
+      <div class="ci-label">🏛️ City Hall</div>
+      <div class="ci-value">425 E State St<br>Rockford, IL 61104</div>
+    </div>`;
+
+  grid.innerHTML += `
+    <div class="contact-item">
+      <div class="ci-label">🗺️ Official Ward Map</div>
+      <a href="https://rockfordil.gov/576/Wards" target="_blank">View Ward ${ward} Map →</a>
+    </div>`;
+
+  document.getElementById('result').classList.add('visible');
+  document.getElementById('notFound').classList.remove('visible');
+}
+
+function showNotFound() {
+  setStatus('idle');
+  document.getElementById('result').classList.remove('visible');
+  document.getElementById('notFound').classList.add('visible');
+}
+
+function setStatus(state) {
+  const el = document.getElementById('status');
+  if (state === 'loading') {
+    el.classList.add('loading');
+    document.getElementById('result').classList.remove('visible');
+    document.getElementById('notFound').classList.remove('visible');
+  } else {
+    el.classList.remove('loading');
+  }
+}
+</script>
+</body>
+</html>
