@@ -370,22 +370,21 @@ async function lookupAddress() {
   setStatus('loading');
 
   try {
-    // Call our Cloudflare Worker proxy — API key never touches the browser
     const res = await fetch(`${WORKER_URL}?address=${encodeURIComponent(address)}`);
-    const { geoData, civicData } = await res.json();
+    const data = await res.json();
 
-    if (!geoData || geoData.status !== 'OK' || !geoData.results.length) {
-      throw new Error('geocode_failed');
+    if (data.error) throw new Error(data.error);
+
+    // Extract ward from Rockford's official 2025 GIS service
+    const features = data.wardData && data.wardData.features;
+    if (!features || !features.length) {
+      showNotFound();
+      return;
     }
 
-    const formattedAddr = geoData.results[0].formatted_address;
-
-    // Extract ward from civic data
-    let wardNum = extractWardFromCivic(civicData);
-    if (!wardNum) wardNum = extractWardFromDivisions(civicData);
-
+    const wardNum = features[0].attributes.Ward;
     if (wardNum && ALDERMEN[wardNum]) {
-      showResult(wardNum, formattedAddr);
+      showResult(wardNum, data.formattedAddress);
     } else {
       showNotFound();
     }
@@ -394,33 +393,6 @@ async function lookupAddress() {
     console.error(err);
     showNotFound();
   }
-}
-
-function extractWardFromCivic(data) {
-  if (!data || !data.divisions) return null;
-  for (const key of Object.keys(data.divisions)) {
-    const m = key.match(/ward[:\-_](\d+)/i) || key.match(/district[:\-_](\d+)/i);
-    if (m) return parseInt(m[1]);
-  }
-  if (data.offices) {
-    for (const office of data.offices) {
-      const m = (office.name || '').match(/ward\s*(\d+)/i);
-      if (m) return parseInt(m[1]);
-    }
-  }
-  return null;
-}
-
-function extractWardFromDivisions(data) {
-  if (!data || !data.divisions) return null;
-  for (const key of Object.keys(data.divisions)) {
-    const m = key.match(/(\d+)/g);
-    if (m) {
-      const n = parseInt(m[m.length - 1]);
-      if (n >= 1 && n <= 14) return n;
-    }
-  }
-  return null;
 }
 
 function showResult(ward, address) {
