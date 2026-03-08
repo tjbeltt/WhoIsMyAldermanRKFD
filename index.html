@@ -288,8 +288,8 @@
     <div class="city-seal">CITY OF<br>ROCKFORD<br>IL</div>
     <div class="header-text">
       <h1>Ward Finder</h1>
-      <p>Find your Rockford City Council Alderman by address</p>
-      <p1>Do you know who your representatives are?</p1>
+      <p>Do you know who your representatives are?</p>
+      <p style="color:rgba(255,255,255,0.55);font-size:0.82rem;margin-top:0.2rem;font-style:italic;font-weight:300;letter-spacing:0.03em;">Find your Rockford City Council Alderman by address</p>
     </div>
   </div>
 </header>
@@ -342,20 +342,20 @@ const WORKER_URL = 'https://rockford-ward-proxy.belt-tim.workers.dev';
 // ─── ALDERMAN DATA ─────────────────────────────────────────────────────────
 // Source: rockfordil.gov/Directory.aspx?did=56 (updated 2025)
 const ALDERMEN = {
-  1:  { name: "Timothy J. Durkee",  phone: "815-519-6406" },
-  2:  { name: "Jonathan Logemann",  phone: "815-312-8747" },
-  3:  { name: "Chad Tuneberg",      phone: "815-977-5016" },
-  4:  { name: "Kevin Frost",        phone: "815-243-1300" },
-  5:  { name: "Gabrielle Torina",   phone: "815-893-9801" },
-  6:  { name: "Aprel Prunty",       phone: "815-601-6904" },
-  7:  { name: "Janessa Wilkins",    phone: "815-914-4020" },
-  8:  { name: "Karen Hoffman",      phone: "815-399-5026" },
-  9:  { name: "Dawn Granath",       phone: "779-895-4917" },
-  10: { name: "Franklin Beach",     phone: "815-978-8736" },
-  11: { name: "Jaime Salgado",      phone: "779-351-9807" },
-  12: { name: "Gina Meeks",         phone: "815-317-6572" },
-  13: { name: "Tamir Bell",         phone: "779-895-4349", altPhone: "815-200-1009" },
-  14: { name: "Mark Bonne",         phone: "815-289-4752" },
+  1:  { name: "Timothy J. Durkee",  phone: "815-519-6406", email: "tim.durkee@rockfordil.gov",          party: "Republican" },
+  2:  { name: "Jonathan Logemann",  phone: "815-312-8747", email: "jonathan.logemann@rockfordil.gov",   party: "Democrat" },
+  3:  { name: "Chad Tuneberg",      phone: "815-977-5016", email: "chad.tuneberg@rockfordil.gov",       party: "Democrat" },
+  4:  { name: "Kevin Frost",        phone: "815-243-1300", email: "kevin.frost@rockfordil.gov",         party: "Republican" },
+  5:  { name: "Gabrielle Torina",   phone: "815-893-9801", email: "gabrielle.torina@rockfordil.gov",    party: "Democrat" },
+  6:  { name: "Aprel Prunty",       phone: "815-601-6904", email: "aprel.prunty@rockfordil.gov",        party: "Democrat" },
+  7:  { name: "Janessa Wilkins",    phone: "815-914-4020", email: "janessa.wilkins@rockfordil.gov",     party: "Democrat" },
+  8:  { name: "Karen Hoffman",      phone: "815-399-5026", email: "karen.hoffman@rockfordil.gov",       party: "Democrat" },
+  9:  { name: "Dawn Granath",       phone: "779-895-4917", email: "dawn.granath@rockfordil.gov",        party: "Democrat" },
+  10: { name: "Franklin Beach",     phone: "815-978-8736", email: "franklin.beach@rockfordil.gov",      party: "Republican" },
+  11: { name: "Jaime Salgado",      phone: "779-351-9807", email: "jaime.salgado@rockfordil.gov",       party: "Democrat" },
+  12: { name: "Gina Meeks",         phone: "815-317-6572", email: "gina.meeks@rockfordil.gov",          party: "Democrat" },
+  13: { name: "Tamir Bell",         phone: "779-895-4349", email: "tamir.bell@rockfordil.gov",          party: "Democrat", altPhone: "815-200-1009" },
+  14: { name: "Mark Bonne",         phone: "815-289-4752", email: "mark.bonne@rockfordil.gov",          party: "Democrat" },
 };
 
 async function lookupAddress() {
@@ -401,7 +401,11 @@ function showResult(ward, address) {
   document.getElementById('wardNum').textContent = ward;
   document.getElementById('wardTitle').textContent = `Ward ${ward}`;
   document.getElementById('addressFound').textContent = address;
-  document.getElementById('aldermanName').textContent = a.name;
+
+  const partyColor = a.party === 'Republican' ? '#c0392b' : '#1a5fb4';
+  const partyLetter = a.party === 'Republican' ? 'R' : 'D';
+  document.getElementById('aldermanName').innerHTML =
+    `${a.name} <span style="display:inline-block;font-size:1rem;background:${partyColor};color:#fff;border-radius:4px;padding:2px 8px;vertical-align:middle;font-family:'DM Sans',sans-serif;font-weight:500;">${partyLetter}</span>`;
 
   const grid = document.getElementById('contactGrid');
   grid.innerHTML = '';
@@ -419,6 +423,12 @@ function showResult(ward, address) {
         <a href="tel:${a.altPhone.replace(/[^0-9]/g,'')}">${a.altPhone}</a>
       </div>`;
   }
+
+  grid.innerHTML += `
+    <div class="contact-item">
+      <div class="ci-label">✉️ Email</div>
+      <a href="mailto:${a.email}">${a.email}</a>
+    </div>`;
 
   grid.innerHTML += `
     <div class="contact-item">
